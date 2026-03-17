@@ -8,13 +8,14 @@ import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
 import { UsersService } from 'src/users/user.service';
 import { PrismaService } from 'src/prisma.service';
+import { PaymentsService } from 'src/payments/payment.service';
 
 @Module({
   imports: [
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '1d' },
     }),
     MailModule,
   ],
@@ -24,6 +25,7 @@ import { PrismaService } from 'src/prisma.service';
     MailService,
     UsersService,
     PrismaService,
+    PaymentsService,
   ],
   controllers: [AuthController],
   exports: [AuthService],

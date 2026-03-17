@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -36,7 +38,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
-  @Post('update')
+  @Put('update')
   async update(
     @Body(new ValidationPipe()) updateUserDto: UpdateUserDto,
     @Request() req: Request,
@@ -49,5 +51,12 @@ export class AuthController {
   @Get('recovery-password')
   async recoveryPassword(@Body('email') email: string) {
     return await this.authService.recoveryPassword(email);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete('delete')
+  async delete(@Request() req: Request) {
+    const user = req['user'] as { email: string };
+    return await this.authService.delete(user.email);
   }
 }

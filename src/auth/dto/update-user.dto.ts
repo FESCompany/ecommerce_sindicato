@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   IsEmail,
   IsOptional,
@@ -10,8 +9,8 @@ import {
 export class UpdateUserDto {
   @IsString()
   @IsOptional()
-  @MinLength(6)
-  @MaxLength(20)
+  @MinLength(6, { message: 'Store name must be at least 6 characters long' })
+  @MaxLength(20, { message: 'Store name must be at most 20 characters long' })
   username?: string;
 
   @IsEmail()
@@ -21,8 +20,20 @@ export class UpdateUserDto {
   email?: string;
 
   @IsString()
+  @MinLength(11, { message: 'CPF or CNPJ must be at most 11 characters long' })
+  @MaxLength(14, { message: 'CPF or CNPJ must be at least 14 characters long' })
   @IsOptional()
-  @MinLength(6)
-  @MaxLength(20)
-  password?: string;
+  cpfCnpj?: string;
+
+  @IsString()
+  @MinLength(8, { message: 'CPF or CNPJ must be at most 8 characters long' })
+  @MaxLength(8, { message: 'CPF or CNPJ must be at least 8 characters long' })
+  @IsOptional()
+  postalCode?: string;
+
+  @IsString()
+  @MinLength(6, { message: 'Store name must be at least 6 characters long' })
+  @MaxLength(20, { message: 'Store name must be at most 20 characters long' })
+  @IsOptional()
+  storeName?: string;
 }

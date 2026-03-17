@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class SellerGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -21,6 +21,7 @@ export class AuthGuard implements CanActivate {
         isSelling: boolean;
       }>(token);
       request['user'] = payload;
+      if (!payload.isSelling) throw new UnauthorizedException();
     } catch {
       throw new UnauthorizedException();
     }
