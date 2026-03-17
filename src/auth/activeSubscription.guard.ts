@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
 @Injectable()
-export class SellerGuard implements CanActivate {
+export class ActiveSubscriptionGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -16,10 +16,10 @@ export class SellerGuard implements CanActivate {
     if (!token) throw new UnauthorizedException();
     try {
       const payload = await this.jwtService.verifyAsync<{
-        isSelling: boolean;
+        active: boolean;
       }>(token);
       request['user'] = payload;
-      if (!payload.isSelling) throw new UnauthorizedException();
+      if (!payload.active) throw new UnauthorizedException();
     } catch {
       throw new UnauthorizedException();
     }
