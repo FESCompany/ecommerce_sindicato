@@ -5,4 +5,5 @@ export class ProductResponseDto {
   price: number;
   amount: number;
   image?: string;
+  userId: string;
 }

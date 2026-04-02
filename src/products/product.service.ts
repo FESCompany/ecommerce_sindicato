@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import * as admin from 'firebase-admin';
+import { Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
 
   async product(slug: string, id: string): Promise<ProductResponseDto | null> {
-    const store = await this.prisma.user.findUnique({
+    const store = await this.prismaService.user.findUnique({
       where: { storeSlug: slug },
       select: { id: true },
     });
 
     if (!store) return null;
 
-    return this.prisma.product.findFirst({
+    return this.prismaService.product.findFirst({
       where: {
         id,
         userId: store.id,
@@ -31,6 +31,7 @@ export class ProductsService {
         createdAt: true,
         updatedAt: true,
         image: true,
+        userId: true,
       },
     });
   }
@@ -41,14 +42,14 @@ export class ProductsService {
     slug: string;
     orderBy?: Prisma.ProductOrderByWithRelationInput;
   }): Promise<ProductResponseDto[] | null> {
-    const store = await this.prisma.user.findUnique({
+    const store = await this.prismaService.user.findUnique({
       where: { storeSlug: params.slug },
       select: { id: true },
     });
 
     if (!store) return null;
 
-    return this.prisma.product.findMany({
+    return this.prismaService.product.findMany({
       skip: params.skip,
       take: params.take,
       cursor: params.cursor,
@@ -65,6 +66,7 @@ export class ProductsService {
         createdAt: true,
         updatedAt: true,
         image: true,
+        userId: true,
       },
     });
   }
@@ -73,7 +75,7 @@ export class ProductsService {
     data: CreateProductDto,
     userId: string,
   ): Promise<ProductResponseDto> {
-    return this.prisma.product.create({
+    return this.prismaService.product.create({
       data: {
         ...data,
         userId,
@@ -87,6 +89,7 @@ export class ProductsService {
         createdAt: true,
         updatedAt: true,
         image: true,
+        userId: true,
       },
     });
   }
@@ -95,7 +98,7 @@ export class ProductsService {
     where: Prisma.ProductWhereUniqueInput;
     data: Prisma.ProductUpdateInput;
   }): Promise<ProductResponseDto> {
-    return this.prisma.product.update({
+    return this.prismaService.product.update({
       where: params.where,
       data: params.data,
       select: {
@@ -107,17 +110,18 @@ export class ProductsService {
         createdAt: true,
         updatedAt: true,
         image: true,
+        userId: true,
       },
     });
   }
 
   async upload(file: Express.Multer.File, userId: string, productId: string) {
-    const store = await this.prisma.user.findUnique({
+    const store = await this.prismaService.user.findUnique({
       where: {
         id: userId,
       },
     });
-    const product = await this.prisma.product.findFirst({
+    const product = await this.prismaService.product.findFirst({
       where: {
         id: productId,
         userId,
@@ -144,7 +148,7 @@ export class ProductsService {
       action: 'read',
       expires: '03-09-2491',
     });
-    await this.prisma.product.update({
+    await this.prismaService.product.update({
       where: {
         id: productId,
         userId,
@@ -159,7 +163,7 @@ export class ProductsService {
   async deleteProduct(
     where: Prisma.ProductWhereUniqueInput,
   ): Promise<ProductResponseDto> {
-    return this.prisma.product.delete({
+    return this.prismaService.product.delete({
       where,
       select: {
         id: true,
@@ -170,6 +174,7 @@ export class ProductsService {
         createdAt: true,
         updatedAt: true,
         image: true,
+        userId: true,
       },
     });
   }
