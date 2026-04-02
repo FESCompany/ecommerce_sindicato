@@ -19,6 +19,10 @@ enum PaymentStatus {
   EXPIRED
 }
 
+enum SellerPaymentProvider {
+  ASAASTransfer
+}
+
 model User {
   id         String @id @default(uuid())
   username   String
@@ -32,14 +36,18 @@ model User {
   products Product[]
 
   active          Boolean @default(false)
-  asaasCustomerId String  @unique()
+  asaasCustomerId String? @unique()
 
   storeSlug String? @unique
   storeName String?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  payments  Payment[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  subscriptions         Subscription[]
+  sellerPaymentAccounts SellerPaymentAccount[]
+
+  buyerOrders  Order[] @relation("BuyerOrders")
+  sellerOrders Order[] @relation("SellerOrders")
 }
 
 model Product {
@@ -53,14 +61,47 @@ model Product {
   updatedAt   DateTime @updatedAt
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+  orders      Order[]
 }
 
-model Payment {
+model Order {
+  id String @id @default(uuid())
+
+  buyerId String
+  buyer   User   @relation("BuyerOrders", fields: [buyerId], references: [id])
+
+  sellerId String
+  seller   User   @relation("SellerOrders", fields: [sellerId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  asaasPaymentId String @unique
+
+  status PaymentStatus @default(PENDING)
+
+  price Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
   id     String @id @default(uuid())
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  asaasPaymentId String        @unique()
-  status         PaymentStatus
-  dueDate        DateTime
+  asaasSubscriptionId String        @unique()
+  status              PaymentStatus
+  dueDate             DateTime
+}
+
+model SellerPaymentAccount {
+  id       String                @id @default(uuid())
+  provider SellerPaymentProvider @default(ASAASTransfer)
+  userId   String                @unique
+  user     User                  @relation(fields: [userId], references: [id])
+
+  encryptedApiKey String
+  isActive        Boolean @default(true)
 }
