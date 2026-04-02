@@ -46,7 +46,8 @@ export class RegisterUserDto {
   storeName?: string;
 
   @IsEnum(BillingType)
-  billingType: BillingType;
+  @IsOptional()
+  billingType?: BillingType;
 
   @IsBoolean()
   isSelling: boolean;

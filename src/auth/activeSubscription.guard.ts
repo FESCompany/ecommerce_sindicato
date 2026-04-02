@@ -4,29 +4,25 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { UsersService } from 'src/users/user.service';
 
 @Injectable()
 export class ActiveSubscriptionGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(private userService: UsersService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokemFromHeader(request);
-    if (!token) throw new UnauthorizedException();
-    try {
-      const payload = await this.jwtService.verifyAsync<{
-        active: boolean;
-      }>(token);
-      request['user'] = payload;
-      if (!payload.active) throw new UnauthorizedException();
-    } catch {
+    const user = request['user'] as { sub: string };
+    if (!user?.sub) {
       throw new UnauthorizedException();
     }
+    const foundUser = await this.userService.user({ id: user.sub });
+    if (!foundUser) {
+      throw new UnauthorizedException('User not found');
+    }
+    if (!foundUser.active) {
+      throw new UnauthorizedException('Subscription is not active');
+    }
     return true;
-  }
-  private extractTokemFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
   }
 }

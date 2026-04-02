@@ -1,15 +1,16 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { HashService } from 'src/crypto/hash.service';
+import { HashService } from 'src/hash/hash.service';
 import { JwtService } from '@nestjs/jwt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { MailService } from './mail/mail.service';
 import { UsersService } from 'src/users/user.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { generateSlug } from 'src/common/utils/slug.util';
-import { PaymentsService } from 'src/payments/payment.service';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { PaymentStatus } from 'src/payments/dtos/create-payment.dto';
-import { Cicly } from 'src/payments/dtos/subscription-register.dto';
+import { PaymentStatus } from 'src/subscription/dtos/create-payment.dto';
+import { BillingService } from 'src/billing/billing.service';
+import { SubscriptionService } from 'src/subscription/subscription.service';
+import { Cycle } from 'src/asaas/dtos/create-charge.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,28 +19,12 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
     private usersService: UsersService,
-    private paymentsService: PaymentsService,
+    private subscriptionService: SubscriptionService,
+    private billingService: BillingService,
   ) {}
 
   async register(data: RegisterUserDto) {
     try {
-      // 1. creating asaas (payment service) client
-      const costumer = await this.paymentsService.client({
-        name: data.username,
-        email: data.email,
-        postalCode: data.postalCode,
-        cpfCnpj: data.cpfCnpj,
-      });
-
-      // 2. create charge
-      const payment = await this.paymentsService.subscription({
-        customer: costumer.id,
-        billingType: data.billingType,
-        value: 400,
-        cicly: Cicly.MONTHLY,
-        nextDueDate: new Date(),
-      });
-
       const hashedPassword = await this.hashService.hash(data.password);
       data.password = hashedPassword;
 
@@ -48,19 +33,50 @@ export class AuthService {
       if (data.storeName)
         storeSlug = await this.generateUniqueSlug(data.storeName);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { billingType, ...rest } = data;
+
+      if (!data.isSelling) {
+        const createdUser = await this.usersService.createUser({
+          ...rest,
+          active: true, // já pode ativar direto
+          storeSlug,
+        });
+
+        const payload = {
+          username: createdUser.username,
+          email: createdUser.email,
+        };
+
+        return {
+          ...payload,
+          access_token: await this.jwtService.signAsync({
+            ...payload,
+            sub: createdUser.id,
+          }),
+        };
+      }
+
+      const { customerId, charge } = await this.billingService.createCharge(
+        {
+          ...data,
+          billingType: billingType!,
+          nextDueDate: new Date(),
+          value: 400,
+          cycle: Cycle.MONTHLY,
+        },
+        'subscription',
+      );
 
       const createdUser = await this.usersService.createUser({
         ...rest,
         active: false,
-        asaasCustomerId: costumer.id,
+        asaasCustomerId: customerId,
         storeSlug,
       });
 
-      await this.paymentsService.create({
+      await this.subscriptionService.create({
         userId: createdUser.id,
-        asaasPaymentId: payment.id,
+        asaasSubscriptionId: charge.id,
         dueDate: new Date(),
         status: PaymentStatus.PENDING,
       });
@@ -74,13 +90,14 @@ export class AuthService {
         storeName: createdUser.storeName,
         storeSlug,
       };
+
       return {
         ...payload,
         access_token: await this.jwtService.signAsync({
           ...payload,
           sub: createdUser.id,
         }),
-        invoiceUrl: payment.invoiceUrl,
+        invoiceUrl: charge.invoiceUrl,
       };
     } catch (error) {
       if (
