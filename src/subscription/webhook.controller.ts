@@ -6,6 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service';
+import { ConfigService } from '@nestjs/config';
+import { PaymentGatewayService } from 'src/payment-gateway/payment-gateway.service';
 
 type Webhook = {
   payment: {
@@ -15,14 +17,18 @@ type Webhook = {
 
 @Controller('webhook/subscription')
 export class AsaasWebhook {
-  constructor(private subscriptionService: SubscriptionService) {}
+  constructor(
+    private subscriptionService: SubscriptionService,
+    private configService: ConfigService,
+    private paymentGatewayService: PaymentGatewayService,
+  ) {}
   @Post()
   async handle(
     @Body()
     body: Webhook,
     @Headers('asaas-access-token') token: string,
   ) {
-    if (token !== process.env.ASAAS_WEBHOOK_TOKEN)
+    if (token !== this.configService.get<string>('ASAAS_WEBHOOK_TOKEN'))
       throw new UnauthorizedException('Invalid webhook token');
 
     const { payment } = body;
@@ -41,9 +47,9 @@ export class AsaasWebhook {
       };
 
     // validate real payment status with asaas api
-    const realPayment = await this.subscriptionService.validatePayment(
+    const realPayment = await this.paymentGatewayService.validatePayment(
       payment.id,
-      process.env.ASAAS_API_KEY!,
+      this.configService.get<string>('ASAAS_API_KEY')!,
     );
 
     if (realPayment.id !== subscription.asaasSubscriptionId)

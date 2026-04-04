@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export enum PaymentStatus {
   PENDING = 'PENDING',
@@ -12,7 +12,8 @@ export class CreatePaymentDto {
   userId: string;
 
   @IsString()
-  asaasSubscriptionId: string;
+  @IsOptional()
+  asaasSubscriptionId?: string;
 
   @IsEnum(PaymentStatus)
   status: PaymentStatus;

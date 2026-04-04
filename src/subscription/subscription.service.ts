@@ -1,75 +1,104 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreatePaymentDto } from './dtos/create-payment.dto';
-
-type AsaasPaymentStatus =
-  | 'PENDING'
-  | 'RECEIVED'
-  | 'CONFIRMED'
-  | 'OVERDUE'
-  | 'FAILED'
-  | 'REFUNDED'
-  | 'CHARGEBACK';
+import { Prisma, Subscription } from 'src/generated/prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SubscriptionService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
   async create(createPaymentDto: CreatePaymentDto) {
-    await this.prismaService.subscription.create({
-      data: createPaymentDto,
-    });
+    try {
+      return await this.prismaService.subscription.create({
+        data: createPaymentDto,
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to create subscription');
+    }
+  }
+
+  async update(params: {
+    where: Prisma.SubscriptionWhereUniqueInput;
+    data: Prisma.SubscriptionUpdateInput;
+  }): Promise<Subscription> {
+    const { where, data } = params;
+
+    try {
+      return await this.prismaService.subscription.update({
+        data,
+        where,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      )
+        throw new ConflictException('User already exists');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      )
+        throw new NotFoundException('User not found');
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to update user');
+    }
   }
 
   async getSubscriptionById(subscriptionId: string) {
-    return await this.prismaService.subscription.findUnique({
-      where: { asaasSubscriptionId: subscriptionId },
-    });
+    try {
+      return await this.prismaService.subscription.findUnique({
+        where: { id: subscriptionId },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException(
+        'Failed to fetch subscription by id',
+      );
+    }
   }
 
   async paymentStatus(
     status: 'PAID' | 'EXPIRED' | 'PENDING',
     subscriptionId: string,
   ) {
-    const payment = await this.prismaService.subscription.update({
-      where: {
-        asaasSubscriptionId: subscriptionId,
-      },
-      data: {
-        status,
-      },
-    });
-
-    const hasValidPayment = await this.prismaService.subscription.findFirst({
-      where: {
-        userId: payment.userId,
-        status: 'PAID',
-      },
-    });
-
-    await this.prismaService.user.update({
-      where: { id: payment.userId },
-      data: {
-        active: !!hasValidPayment,
-      },
-    });
-  }
-  async validatePayment(paymentId: string, apiKey: string) {
-    const response = await fetch(
-      `${process.env.ASAAS_API}/payments/${paymentId}`,
-      {
-        headers: {
-          access_token: apiKey,
+    try {
+      const payment = await this.prismaService.subscription.update({
+        where: {
+          asaasSubscriptionId: subscriptionId,
         },
-      },
-    );
-    const data = (await response.json()) as {
-      id: string;
-      status: AsaasPaymentStatus;
-      subscriptionId: string;
-      value: number;
-    };
+        data: {
+          status,
+        },
+      });
 
-    return data;
+      const hasValidPayment = await this.prismaService.subscription.findFirst({
+        where: {
+          userId: payment.userId,
+          status: 'PAID',
+        },
+      });
+
+      return await this.prismaService.user.update({
+        where: { id: payment.userId },
+        data: {
+          active: !!hasValidPayment,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException(
+        'Failed to upload subscription payment status',
+      );
+    }
   }
 }
