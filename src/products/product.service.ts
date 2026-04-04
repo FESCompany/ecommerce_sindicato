@@ -7,7 +7,7 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import * as admin from 'firebase-admin';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {

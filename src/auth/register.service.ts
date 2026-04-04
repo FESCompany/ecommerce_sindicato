@@ -6,8 +6,8 @@ import { UsersService } from 'src/users/user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { Cycle } from 'src/payment-gateway/dtos/create-charge.dto';
 import { PaymentStatus } from 'src/subscription/dtos/create-payment.dto';
-import { User } from 'src/generated/prisma/client';
 import { SlugService } from 'src/slug/slug.service';
+import { User } from '@prisma/client';
 
 type RegisterResult = {
   user: User;

@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from 'src/users/user.service';
 import { UpdateUserDto } from './dtos/update-user.dto';
-import { Prisma } from 'src/generated/prisma/client';
 import { SlugService } from 'src/slug/slug.service';
+import { Prisma } from '@prisma/client';
 
 type UpdateResponse = { username: string; email: string };
 

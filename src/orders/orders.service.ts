@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { PaymentStatus } from 'src/generated/prisma/enums';
-import { Prisma } from 'src/generated/prisma/client';
 import { CreatePaymentProviderOrderDto } from './dtos/create-payment-provider-order.dto';
 import { PaymentProviderService } from 'src/payment-provider/payment-provider.service';
 import { BillingService } from 'src/billing/billing.service';
+import { Prisma } from '@prisma/client';
 
 type ItemData = {
   productId: string;
