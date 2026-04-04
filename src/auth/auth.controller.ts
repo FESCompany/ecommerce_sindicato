@@ -13,13 +13,17 @@ import {
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { AuthService } from './auth.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from '../account/dtos/update-user.dto';
 import { AuthGuard } from './auth.guard';
 import { ValidationPipe } from 'src/validation.pipe';
+import { AccountService } from 'src/account/account.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private accountService: AccountService,
+  ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -43,8 +47,8 @@ export class AuthController {
     @Body(new ValidationPipe()) updateUserDto: UpdateUserDto,
     @Request() req: Request,
   ) {
-    const user = req['user'] as { email: string };
-    return await this.authService.update(user.email, updateUserDto);
+    const user = req['user'] as { sub: string };
+    return await this.accountService.update(user.sub, updateUserDto);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -54,9 +58,10 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
   @Delete('delete')
   async delete(@Request() req: Request) {
-    const user = req['user'] as { email: string };
-    return await this.authService.delete(user.email);
+    const user = req['user'] as { sub: string };
+    return await this.accountService.delete(user.sub);
   }
 }
