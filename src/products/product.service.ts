@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
@@ -10,30 +14,36 @@ export class ProductsService {
   constructor(private prismaService: PrismaService) {}
 
   async product(slug: string, id: string): Promise<ProductResponseDto | null> {
-    const store = await this.prismaService.user.findUnique({
-      where: { storeSlug: slug },
-      select: { id: true },
-    });
+    try {
+      const store = await this.prismaService.user.findUnique({
+        where: { storeSlug: slug },
+        select: { id: true },
+      });
 
-    if (!store) return null;
+      if (!store) throw new NotFoundException('Seller not found');
 
-    return this.prismaService.product.findFirst({
-      where: {
-        id,
-        userId: store.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        amount: true,
-        price: true,
-        createdAt: true,
-        updatedAt: true,
-        image: true,
-        userId: true,
-      },
-    });
+      return this.prismaService.product.findFirst({
+        where: {
+          id,
+          userId: store.id,
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          stock: true,
+          soldCount: true,
+          price: true,
+          createdAt: true,
+          updatedAt: true,
+          image: true,
+          userId: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to fetch product');
+    }
   }
   async products(params: {
     skip?: number;
@@ -42,140 +52,170 @@ export class ProductsService {
     slug: string;
     orderBy?: Prisma.ProductOrderByWithRelationInput;
   }): Promise<ProductResponseDto[] | null> {
-    const store = await this.prismaService.user.findUnique({
-      where: { storeSlug: params.slug },
-      select: { id: true },
-    });
+    try {
+      const store = await this.prismaService.user.findUnique({
+        where: { storeSlug: params.slug },
+        select: { id: true },
+      });
 
-    if (!store) return null;
+      if (!store) return null;
 
-    return this.prismaService.product.findMany({
-      skip: params.skip,
-      take: params.take,
-      cursor: params.cursor,
-      where: {
-        userId: store.id,
-      },
-      orderBy: params.orderBy,
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        amount: true,
-        price: true,
-        createdAt: true,
-        updatedAt: true,
-        image: true,
-        userId: true,
-      },
-    });
+      return this.prismaService.product.findMany({
+        skip: params.skip,
+        take: params.take,
+        cursor: params.cursor,
+        where: {
+          userId: store.id,
+        },
+        orderBy: params.orderBy,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          stock: true,
+          soldCount: true,
+          price: true,
+          createdAt: true,
+          updatedAt: true,
+          image: true,
+          userId: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to fetch products');
+    }
   }
 
   async createProduct(
     data: CreateProductDto,
     userId: string,
   ): Promise<ProductResponseDto> {
-    return this.prismaService.product.create({
-      data: {
-        ...data,
-        userId,
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        amount: true,
-        price: true,
-        createdAt: true,
-        updatedAt: true,
-        image: true,
-        userId: true,
-      },
-    });
+    try {
+      return this.prismaService.product.create({
+        data: {
+          ...data,
+          userId,
+          soldCount: 0,
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          stock: true,
+          soldCount: true,
+          price: true,
+          createdAt: true,
+          updatedAt: true,
+          image: true,
+          userId: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to create product');
+    }
   }
 
   async updateProduct(params: {
     where: Prisma.ProductWhereUniqueInput;
     data: Prisma.ProductUpdateInput;
   }): Promise<ProductResponseDto> {
-    return this.prismaService.product.update({
-      where: params.where,
-      data: params.data,
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        amount: true,
-        price: true,
-        createdAt: true,
-        updatedAt: true,
-        image: true,
-        userId: true,
-      },
-    });
+    try {
+      return this.prismaService.product.update({
+        where: params.where,
+        data: params.data,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          stock: true,
+          soldCount: true,
+          price: true,
+          createdAt: true,
+          updatedAt: true,
+          image: true,
+          userId: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to update product');
+    }
   }
 
   async upload(file: Express.Multer.File, userId: string, productId: string) {
-    const store = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-    const product = await this.prismaService.product.findFirst({
-      where: {
-        id: productId,
-        userId,
-      },
-    });
+    try {
+      const store = await this.prismaService.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      const product = await this.prismaService.product.findFirst({
+        where: {
+          id: productId,
+          userId,
+        },
+      });
 
-    if (!store || !product) return null;
+      if (!store || !product) return null;
 
-    const bucket = admin.storage().bucket();
-    const fileName = `images/${store.storeSlug}/${Date.now()}-${file.originalname}`;
-    const fileUpload = bucket.file(fileName);
+      const bucket = admin.storage().bucket();
+      const fileName = `images/${store.storeSlug}/${Date.now()}-${file.originalname}`;
+      const fileUpload = bucket.file(fileName);
 
-    // if there is an existing image, we just delete it, and upload the new one
-    if (product.image) {
-      await bucket.file(product.image).delete();
+      // if there is an existing image, we just delete it, and upload the new one
+      if (product.image) {
+        await bucket.file(product.image).delete();
+      }
+
+      await fileUpload.save(file.buffer, {
+        metadata: {
+          contentType: file.mimetype,
+        },
+      });
+      const [url] = await fileUpload.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491',
+      });
+      await this.prismaService.product.update({
+        where: {
+          id: productId,
+          userId,
+        },
+        data: {
+          image: fileName,
+        },
+      });
+      return { url };
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to upload product image');
     }
-
-    await fileUpload.save(file.buffer, {
-      metadata: {
-        contentType: file.mimetype,
-      },
-    });
-    const [url] = await fileUpload.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
-    });
-    await this.prismaService.product.update({
-      where: {
-        id: productId,
-        userId,
-      },
-      data: {
-        image: fileName,
-      },
-    });
-    return { url };
   }
 
   async deleteProduct(
     where: Prisma.ProductWhereUniqueInput,
   ): Promise<ProductResponseDto> {
-    return this.prismaService.product.delete({
-      where,
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        amount: true,
-        price: true,
-        createdAt: true,
-        updatedAt: true,
-        image: true,
-        userId: true,
-      },
-    });
+    try {
+      return this.prismaService.product.delete({
+        where,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          stock: true,
+          soldCount: true,
+          price: true,
+          createdAt: true,
+          updatedAt: true,
+          image: true,
+          userId: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to delete product');
+    }
   }
 }

@@ -20,8 +20,8 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { SellerGuard } from 'src/auth/seller.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ActiveSubscriptionGuard } from 'src/auth/activeSubscription.guard';
 import { PaymentProviderGuard } from 'src/payment-provider/payment-provider.guard';
+import { SubscriptionGuard } from 'src/subscription/subscription.guard';
 
 @Controller('products')
 export class ProductController {
@@ -40,12 +40,7 @@ export class ProductController {
   }
 
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(
-    AuthGuard,
-    SellerGuard,
-    ActiveSubscriptionGuard,
-    PaymentProviderGuard,
-  )
+  @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard, PaymentProviderGuard)
   @Post()
   async createProduct(
     @Body(new ValidationPipe()) createProductDto: CreateProductDto,
@@ -56,12 +51,7 @@ export class ProductController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @UseGuards(
-    AuthGuard,
-    SellerGuard,
-    ActiveSubscriptionGuard,
-    PaymentProviderGuard,
-  )
+  @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard, PaymentProviderGuard)
   @Put(':id')
   async updateProduct(
     @Param('id') id: string,
@@ -78,12 +68,7 @@ export class ProductController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @UseGuards(
-    AuthGuard,
-    SellerGuard,
-    ActiveSubscriptionGuard,
-    PaymentProviderGuard,
-  )
+  @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard, PaymentProviderGuard)
   @Post('upload/:id')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
@@ -97,12 +82,7 @@ export class ProductController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @UseGuards(
-    AuthGuard,
-    SellerGuard,
-    ActiveSubscriptionGuard,
-    PaymentProviderGuard,
-  )
+  @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard, PaymentProviderGuard)
   @Delete(':id')
   async deleteProduct(@Param('id') id: string, @Request() req: Request) {
     const user = req['user'] as { sub: string };

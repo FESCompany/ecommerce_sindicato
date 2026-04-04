@@ -3,7 +3,8 @@ export class ProductResponseDto {
   name: string;
   description?: string;
   price: number;
-  amount: number;
+  stock: number;
+  soldCount: number;
   image?: string;
   userId: string;
 }
