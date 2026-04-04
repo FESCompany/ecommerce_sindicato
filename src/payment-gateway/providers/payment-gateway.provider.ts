@@ -1,6 +1,6 @@
+import { PaymentStatus } from '@prisma/client';
 import { CreateChargeDto } from 'src/payment-gateway/dtos/create-charge.dto';
 import { CreateClientDto } from 'src/payment-gateway/dtos/create-client.dto';
-import { PaymentStatus } from 'src/generated/prisma/enums';
 
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'INACTIVE';
 export type CustomerResponse = {
