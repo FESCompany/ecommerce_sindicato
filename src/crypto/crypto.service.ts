@@ -6,7 +6,7 @@ export class CryptoService {
   private algorithm = 'aes-256-cbc';
   private key = crypto
     .createHash('sha256')
-    .update(process.env.CRYPTO_SECRET!)
+    .update(process.env.CRYPTO_SECRET! || 'cryoto-secret-key')
     .digest(); // 32 bytes
 
   encrypt(text: string): string {
