@@ -32,6 +32,16 @@ export class PaymentGatewayService {
     );
   }
 
+  async findPaymentBySubscriptionId(
+    externalReference: string,
+    apiKey?: string,
+  ) {
+    return await this.paymentGatewayProvider.findPaymentBySubscriptionId(
+      externalReference,
+      apiKey,
+    );
+  }
+
   async client(clientRegisterDto: CreateClientDto, apiKey?: string) {
     return await this.paymentGatewayProvider.client(clientRegisterDto, apiKey);
   }
