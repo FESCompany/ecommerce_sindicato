@@ -5,6 +5,6 @@ export class ProductResponseDto {
   price: number;
   stock: number;
   soldCount: number;
-  image?: string;
+  image: string | null;
   userId: string;
 }
