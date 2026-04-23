@@ -34,6 +34,14 @@ export class MockGatewayProvider implements PaymentGateWayProvider {
     );
   }
 
+  async findPaymentBySubscriptionId(
+    externalReference: string,
+  ): Promise<ChargeResponse | null> {
+    return new Promise((resolve) =>
+      resolve(this.payments.get(externalReference) || null),
+    );
+  }
+
   async client(clientRegisterDto: CreateClientDto): Promise<CustomerResponse> {
     const id = `mock_cust_${Date.now()}`;
 
