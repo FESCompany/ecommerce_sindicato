@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { HashService } from 'src/hash/hash.service';
-import { JwtModule } from '@nestjs/jwt';
 import { MailModule } from '../mail/mail.module';
 import { UsersService } from 'src/users/user.service';
 import { PrismaService } from 'src/prisma.service';
@@ -15,25 +14,12 @@ import { PaymentGatewayService } from 'src/payment-gateway/payment-gateway.servi
 import { RegisterService } from './register.service';
 import { MailService } from 'src/mail/mail.service';
 import { AccountService } from 'src/account/account.service';
-import { ConfigService } from '@nestjs/config';
-import { TokenService } from 'src/token/token.service';
 import { SlugService } from 'src/slug/slug.service';
 import { PaymentGatewayModule } from 'src/payment-gateway/payment-gateway.module';
+import { TokenModule } from 'src/token/token.module';
 
 @Module({
-  imports: [
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET')!,
-        signOptions: {
-          expiresIn: config.get('JWT_EXPIRES_IN')!,
-        },
-      }),
-    }),
-    MailModule,
-    PaymentGatewayModule,
-  ],
+  imports: [TokenModule, MailModule, PaymentGatewayModule],
   providers: [
     AuthService,
     HashService,
@@ -48,7 +34,6 @@ import { PaymentGatewayModule } from 'src/payment-gateway/payment-gateway.module
     PaymentGatewayService,
     RegisterService,
     AccountService,
-    TokenService,
     SlugService,
   ],
   controllers: [AuthController],
