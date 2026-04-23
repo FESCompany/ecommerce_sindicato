@@ -47,6 +47,33 @@ export class UsersService {
     }
   }
 
+  async clients(sellerId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        buyerOrders: {
+          some: {
+            sellerId: sellerId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        buyerOrders: {
+          where: {
+            sellerId,
+          },
+          select: {
+            id: true,
+            total: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+  }
+
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
     try {
       return await this.prisma.user.create({
