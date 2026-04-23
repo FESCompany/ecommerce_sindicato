@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -145,21 +146,22 @@ export class ProductsService {
   }
 
   async upload(file: Express.Multer.File, userId: string, productId: string) {
+    const store = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    const product = await this.prismaService.product.findFirst({
+      where: {
+        id: productId,
+        userId,
+      },
+    });
+
+    if (!store || !product)
+      return new NotFoundException('Store or product not found');
+
     try {
-      const store = await this.prismaService.user.findUnique({
-        where: {
-          id: userId,
-        },
-      });
-      const product = await this.prismaService.product.findFirst({
-        where: {
-          id: productId,
-          userId,
-        },
-      });
-
-      if (!store || !product) return null;
-
       const bucket = admin.storage().bucket();
       const fileName = `images/${store.storeSlug}/${Date.now()}-${file.originalname}`;
       const fileUpload = bucket.file(fileName);
@@ -174,10 +176,12 @@ export class ProductsService {
           contentType: file.mimetype,
         },
       });
+
       const [url] = await fileUpload.getSignedUrl({
         action: 'read',
         expires: '03-09-2491',
       });
+
       await this.prismaService.product.update({
         where: {
           id: productId,
@@ -194,9 +198,49 @@ export class ProductsService {
     }
   }
 
+  async getProductImageUrl(id: string) {
+    const product = await this.prismaService.product.findUnique({
+      where: { id },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+    if (!product.image) throw new BadRequestException('Product has no image');
+    try {
+      const bucket = admin.storage().bucket();
+      const file = bucket.file(product.image);
+
+      const [url] = await file.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491',
+      });
+
+      return { url };
+    } catch (error) {
+      if (error instanceof Error) throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to delete product');
+    }
+  }
+
   async deleteProduct(
     where: Prisma.ProductWhereUniqueInput,
   ): Promise<ProductResponseDto> {
+    const product = await this.prismaService.product.findUnique({
+      where,
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    if (product.image) {
+      const bucket = admin.storage().bucket();
+      await bucket
+        .file(product.image)
+        .delete()
+        .catch(() => {
+          console.warn('Failed to delete image:', product.image);
+        });
+    }
+
     try {
       return this.prismaService.product.delete({
         where,
