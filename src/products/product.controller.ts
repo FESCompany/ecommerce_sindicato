@@ -36,7 +36,9 @@ export class ProductController {
   @HttpCode(HttpStatus.OK)
   @Get(':slug/:id')
   async getProduct(@Param('slug') slug: string, @Param('id') id: string) {
-    return await this.productsService.product(slug, id);
+    const product = await this.productsService.product(slug, id);
+    const { url } = await this.productsService.getProductImageUrl(id);
+    return { ...product, image: url };
   }
 
   @HttpCode(HttpStatus.CREATED)
@@ -69,7 +71,7 @@ export class ProductController {
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard, PaymentProviderGuard)
-  @Post('upload/:id')
+  @Put('upload/:id')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
     @UploadedFile() file: Express.Multer.File,
