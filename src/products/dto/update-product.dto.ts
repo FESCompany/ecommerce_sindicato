@@ -28,8 +28,4 @@ export class UpdateProductDto {
   @Type(() => Number)
   @IsOptional()
   amount?: number;
-
-  @IsString()
-  @IsOptional()
-  image?: string;
 }
