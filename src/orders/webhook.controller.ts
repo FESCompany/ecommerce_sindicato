@@ -56,7 +56,6 @@ export class WebhookController {
       payment.id,
       apiKey,
     );
-    console.log(realPayment);
 
     if (realPayment.id !== order.asaasPaymentId)
       throw new UnauthorizedException('Payment mismatch');
@@ -71,7 +70,6 @@ export class WebhookController {
       realPayment.status === 'CONFIRMED' ||
       realPayment.status === 'RECEIVED'
     ) {
-      console.log('received');
       await this.orderService.updateStatus(payment.id, 'PAID');
     }
 
