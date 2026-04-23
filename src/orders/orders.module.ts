@@ -10,7 +10,6 @@ import { PaymentGatewayService } from 'src/payment-gateway/payment-gateway.servi
 import { UsersService } from 'src/users/user.service';
 import { SubscriptionService } from 'src/subscription/subscription.service';
 import { WebhookController } from './webhook.controller';
-import { JwtService } from '@nestjs/jwt';
 import { PaymentGatewayModule } from 'src/payment-gateway/payment-gateway.module';
 
 @Module({
@@ -25,7 +24,6 @@ import { PaymentGatewayModule } from 'src/payment-gateway/payment-gateway.module
     PaymentGatewayService,
     UsersService,
     SubscriptionService,
-    JwtService,
   ],
   controllers: [OrdersController, WebhookController],
   exports: [OrdersService],
