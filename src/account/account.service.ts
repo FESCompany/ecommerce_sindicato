@@ -8,6 +8,15 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { SlugService } from 'src/slug/slug.service';
 import { Prisma } from '@prisma/client';
 
+type UserResponse = {
+  username: string;
+  email: string;
+  isSelling: boolean;
+  storeName: string | null;
+  storeSlug: string | null;
+  postalCode: string;
+  cpfCnpj: string;
+};
 type UpdateResponse = { username: string; email: string };
 
 @Injectable()
@@ -16,6 +25,19 @@ export class AccountService {
     private usersService: UsersService,
     private slugService: SlugService,
   ) {}
+  async user(id: string): Promise<UserResponse> {
+    const foundUser = await this.usersService.user({ id });
+    if (!foundUser) throw new NotFoundException('User not found');
+    return {
+      username: foundUser.username,
+      email: foundUser.email,
+      isSelling: foundUser.isSelling,
+      storeName: foundUser.storeName,
+      storeSlug: foundUser.storeSlug,
+      postalCode: foundUser.postalCode,
+      cpfCnpj: foundUser.cpfCnpj,
+    };
+  }
   async update(id: string, data: UpdateUserDto): Promise<UpdateResponse> {
     try {
       const foundUser = await this.usersService.user({ id });
@@ -52,5 +74,10 @@ export class AccountService {
     if (!foundUser) throw new NotFoundException('User not found');
     await this.usersService.deleteUser({ id });
     return { success: true };
+  }
+  async payment(id: string) {
+    const foundUser = await this.usersService.user({ id });
+    if (!foundUser) throw new NotFoundException('User not found');
+    return { active: foundUser.active };
   }
 }
