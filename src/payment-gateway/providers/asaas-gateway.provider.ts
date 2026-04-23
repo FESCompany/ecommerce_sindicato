@@ -134,6 +134,19 @@ export class AsaasProvider implements PaymentGateWayProvider {
     }
     return result.data[0];
   }
+  async findPaymentBySubscriptionId(subscriptionId: string, apiKey?: string) {
+    const url = `${this.configService.get<string>('ASAAS_API')}/payments?subscription=${subscriptionId}`;
+    const response = await this.fetchWithTimetout(url, {
+      method: 'GET',
+      headers: this.getHeader(apiKey),
+    });
+    const result =
+      await this.handleResponse<listResponse<ChargeResponse>>(response);
+    if (!result.data || result.data.length === 0) {
+      return null;
+    }
+    return result.data[0];
+  }
   async client(
     clientRegisterDto: CreateClientDto,
     apiKey?: string,
