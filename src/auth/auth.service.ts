@@ -11,15 +11,11 @@ import { TokenService } from 'src/token/token.service';
 import { MailService } from 'src/mail/mail.service';
 
 type RegisterResponse = {
-  email: string;
-  username: string;
   access_token: string;
   invoiceUrl: string | undefined;
 };
 
 type LoginResponse = {
-  username: string;
-  email: string;
   access_token: string;
 };
 
@@ -39,12 +35,11 @@ export class AuthService {
       sub: result.user.id,
       email: result.user.email,
       username: result.user.username,
+      isSelling: result.user.isSelling,
     };
     return {
-      email: result.user.email,
-      username: result.user.username,
       access_token: await this.tokenService.generateToken(payload),
-      invoiceUrl: result.charge?.invoiceUrl,
+      invoiceUrl: result.invoiceUrl,
     };
   }
 
@@ -62,10 +57,9 @@ export class AuthService {
       sub: foundUser.id,
       email: foundUser.email,
       username: foundUser.username,
+      isSelling: foundUser.isSelling,
     };
     return {
-      email: payload.email,
-      username: payload.username,
       access_token: await this.tokenService.generateToken(payload),
     };
   }
