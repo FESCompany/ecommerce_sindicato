@@ -13,4 +13,7 @@ export class TokenService {
   async generateToken(payload: Payload, options?: JwtSignOptions) {
     return this.jwtService.signAsync(payload, options);
   }
+  async verify(token: string): Promise<{ sub: string }> {
+    return await this.jwtService.verifyAsync(token);
+  }
 }
