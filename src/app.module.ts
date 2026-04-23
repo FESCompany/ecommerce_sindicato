@@ -8,9 +8,12 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { OrderModule } from './orders/orders.module';
 import { PaymentProviderModule } from './payment-provider/payment-provider.module';
 import { ConfigModule } from '@nestjs/config';
+import { TokenModule } from './token/token.module';
+import { UsersModule } from './users/user.module';
 
 @Module({
   imports: [
+    TokenModule, // 👈 ISSO AQUI resolve
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
@@ -19,6 +22,7 @@ import { ConfigModule } from '@nestjs/config';
     ProductsModule,
     SubscriptionModule,
     OrderModule,
+    UsersModule,
     PaymentProviderModule,
     SubscriptionModule,
   ],
