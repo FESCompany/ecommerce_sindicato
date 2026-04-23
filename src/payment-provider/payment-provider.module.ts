@@ -5,7 +5,6 @@ import { PaymentProviderController } from './payment-provider.controller';
 import { CryptoService } from 'src/crypto/crypto.service';
 import { UsersService } from 'src/users/user.service';
 import { PaymentGatewayService } from 'src/payment-gateway/payment-gateway.service';
-import { JwtService } from '@nestjs/jwt';
 import { PaymentGatewayModule } from 'src/payment-gateway/payment-gateway.module';
 
 @Module({
@@ -16,7 +15,6 @@ import { PaymentGatewayModule } from 'src/payment-gateway/payment-gateway.module
     CryptoService,
     UsersService,
     PaymentGatewayService,
-    JwtService,
   ],
   controllers: [PaymentProviderController],
   exports: [PaymentProviderService],
