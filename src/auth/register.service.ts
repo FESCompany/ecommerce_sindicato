@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BillingService } from 'src/billing/billing.service';
 import { HashService } from 'src/hash/hash.service';
 import { SubscriptionService } from 'src/subscription/subscription.service';
@@ -11,10 +15,7 @@ import { User } from '@prisma/client';
 
 type RegisterResult = {
   user: User;
-  charge?: {
-    id: string;
-    invoiceUrl?: string;
-  };
+  invoiceUrl?: string;
 };
 
 @Injectable()
@@ -75,6 +76,12 @@ export class RegisterService {
         'subscription',
       );
 
+    const payment = await this.billingService.payment(charge.id);
+
+    if (!payment) throw new NotFoundException('Subscription payment not found');
+
+    console.log(payment);
+
     await this.usersService.updateUser({
       where: { id: user.id },
       data: {
@@ -88,7 +95,9 @@ export class RegisterService {
         asaasSubscriptionId: charge.id,
       },
     });
-
-    return { user, charge };
+    return {
+      user,
+      invoiceUrl: payment.invoiceUrl,
+    };
   }
 }
