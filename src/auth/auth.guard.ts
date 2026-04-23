@@ -4,22 +4,33 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import type { Request } from 'express';
+import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(private tokenService: TokenService) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokenFromHeader(request);
+
+    const token = this.extractTokenFromCookie(request);
+
     if (!token) throw new UnauthorizedException();
-    const payload: { sub: string } = await this.jwtService.verifyAsync(token);
-    request['user'] = payload;
-    return true;
+
+    try {
+      const payload: { sub: string } = await this.tokenService.verify(token);
+
+      request['user'] = payload;
+
+      return true;
+    } catch {
+      throw new UnauthorizedException();
+    }
   }
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+
+  private extractTokenFromCookie(request: Request): string | undefined {
+    const cookies = request.cookies as { access_token?: string } | undefined;
+    return cookies?.access_token;
   }
 }
