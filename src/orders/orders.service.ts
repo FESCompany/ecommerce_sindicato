@@ -96,6 +96,98 @@ export class OrdersService {
     }
   }
 
+  async sellerOrders(params: {
+    skip?: number;
+    take?: number;
+    cursor?: Prisma.OrderWhereUniqueInput;
+    userId: string;
+    orderBy?: Prisma.OrderOrderByWithRelationInput;
+  }) {
+    const seller = await this.prismaService.user.findUnique({
+      where: { id: params.userId },
+      select: { id: true },
+    });
+
+    if (!seller) throw new NotFoundException('Seller not found');
+
+    try {
+      return this.prismaService.order.findMany({
+        skip: params.skip,
+        take: params.take,
+        cursor: params.cursor,
+        where: {
+          sellerId: seller.id,
+        },
+        orderBy: params.orderBy,
+        select: {
+          id: true,
+          status: true,
+          total: true,
+          asaasPaymentId: true,
+          buyer: {
+            select: {
+              username: true,
+              email: true,
+            },
+          },
+          createdAt: true,
+          items: {
+            select: {
+              productId: true,
+              quantity: true,
+              price: true,
+              product: true, // opcional (join)
+            },
+          },
+        },
+      });
+    } catch {
+      throw new InternalServerErrorException('Failed to fetch orders');
+    }
+  }
+
+  async sellerOrder(userId: string, id: string) {
+    const seller = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!seller) throw new NotFoundException('User not found');
+
+    try {
+      return this.prismaService.order.findFirst({
+        where: {
+          id,
+          sellerId: seller.id,
+        },
+        select: {
+          id: true,
+          status: true,
+          total: true,
+          buyer: {
+            select: {
+              username: true,
+              email: true,
+            },
+          },
+          createdAt: true,
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  image: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch {
+      throw new InternalServerErrorException('Failed to fetch order');
+    }
+  }
+
   async createPaymentProviderOrder(
     createPaymentProviderOrderDto: CreatePaymentProviderOrderDto,
   ) {
