@@ -53,6 +53,10 @@ export interface PaymentGateWayProvider {
     externalReference: string,
     apiKey?: string,
   ): Promise<ChargeResponse | null>;
+  findPaymentBySubscriptionId(
+    subscriptionId: string,
+    apiKey?: string,
+  ): Promise<ChargeResponse | null>;
   client(
     clientRegisterDto: CreateClientDto,
     apiKey?: string,
