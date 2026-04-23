@@ -169,4 +169,11 @@ export class BillingService {
       charge,
     };
   }
+
+  async payment(subscriptionId: string, apiKey?: string) {
+    return await this.paymentGatewayService.findPaymentBySubscriptionId(
+      subscriptionId,
+      apiKey,
+    );
+  }
 }
