@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -17,6 +18,7 @@ import { UpdateUserDto } from '../account/dtos/update-user.dto';
 import { AuthGuard } from './auth.guard';
 import { ValidationPipe } from 'src/validation.pipe';
 import { AccountService } from 'src/account/account.service';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -26,18 +28,62 @@ export class AuthController {
   ) {}
 
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  @Get('me')
+  async user(@Request() req: Request) {
+    const user = req['user'] as { sub: string };
+    return await this.accountService.user(user.sub);
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Body(new ValidationPipe()) loginUserDto: LoginUserDto) {
-    return await this.authService.login(
+  async login(
+    @Body(new ValidationPipe()) loginUserDto: LoginUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.login(
       loginUserDto.email,
       loginUserDto.password,
     );
+
+    res.cookie('access_token', result.access_token, {
+      httpOnly: true, // js scripts has no access
+      secure: false, // just https connections
+      sameSite: 'lax', //  CSRF basic protection
+      maxAge: 1000 * 60 * 60, // 1h
+    });
+
+    return {
+      success: true,
+      message: 'User logged in!',
+    };
   }
 
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
-  async register(@Body(new ValidationPipe()) registerUserDto: RegisterUserDto) {
-    return await this.authService.register(registerUserDto);
+  async register(
+    @Body(new ValidationPipe()) registerUserDto: RegisterUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.register(registerUserDto);
+
+    res.cookie('access_token', result.access_token, {
+      httpOnly: true, // js scripts has no access
+      secure: false, // just https connections
+      sameSite: 'lax', //  CSRF basic protection
+      maxAge: 1000 * 60 * 60, // 1h
+    });
+
+    return {
+      success: true,
+      message: 'User registered!',
+    };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('recovery-password')
+  async recoveryPassword(@Body('email') email: string) {
+    return await this.authService.recoveryPassword(email);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -52,16 +98,18 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Get('recovery-password')
-  async recoveryPassword(@Body('email') email: string) {
-    return await this.authService.recoveryPassword(email);
-  }
-
-  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   @Delete('delete')
   async delete(@Request() req: Request) {
     const user = req['user'] as { sub: string };
     return await this.accountService.delete(user.sub);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  @Get('payment')
+  async payment(@Request() req: Request) {
+    const user = req['user'] as { sub: string };
+    return await this.accountService.payment(user.sub);
   }
 }
