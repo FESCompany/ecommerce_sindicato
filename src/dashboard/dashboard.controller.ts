@@ -20,6 +20,6 @@ export class DashboardController {
   @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard, PaymentProviderGuard)
   async orders(@Request() req: Request) {
     const user = req['user'] as { sub: string };
-    return await this.dashboardService.products(user.sub);
+    return await this.dashboardService.orders(user.sub);
   }
 }
