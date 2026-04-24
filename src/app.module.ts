@@ -10,6 +10,7 @@ import { PaymentProviderModule } from './payment-provider/payment-provider.modul
 import { ConfigModule } from '@nestjs/config';
 import { TokenModule } from './token/token.module';
 import { UsersModule } from './users/user.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UsersModule } from './users/user.module';
     UsersModule,
     PaymentProviderModule,
     SubscriptionModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
