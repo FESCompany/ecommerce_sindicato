@@ -14,7 +14,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
-    TokenModule, // 👈 ISSO AQUI resolve
+    TokenModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
