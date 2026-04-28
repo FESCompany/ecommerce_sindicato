@@ -19,6 +19,8 @@ import { AuthGuard } from './auth.guard';
 import { ValidationPipe } from 'src/validation.pipe';
 import { AccountService } from 'src/account/account.service';
 import type { Response } from 'express';
+import { RecoverPasswordDto } from './dto/recover-password.dto';
+import { RecoverPasswordGuard } from './recover-password.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -81,9 +83,23 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Get('recovery-password')
-  async recoveryPassword(@Body('email') email: string) {
-    return await this.authService.recoveryPassword(email);
+  @Put('send-password-recovery-email')
+  async sendPasswordRecoveryEmail(@Body('email') email: string) {
+    return await this.authService.sendPasswordRecoveryEmail(email);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RecoverPasswordGuard)
+  @Put('recover-password')
+  async recoverPassword(
+    @Body(new ValidationPipe()) recoverPassword: RecoverPasswordDto,
+    @Request() req: Request,
+  ) {
+    const user = req['user'] as { sub: string };
+    return await this.authService.recoverPassword(
+      user.sub,
+      recoverPassword.password,
+    );
   }
 
   @HttpCode(HttpStatus.OK)
@@ -103,6 +119,17 @@ export class AuthController {
   async delete(@Request() req: Request) {
     const user = req['user'] as { sub: string };
     return await this.accountService.delete(user.sub);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+    return {
+      success: true,
+      message: 'User logged out!',
+    };
   }
 
   @HttpCode(HttpStatus.OK)
