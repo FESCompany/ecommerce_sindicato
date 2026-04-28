@@ -64,7 +64,7 @@ export class AuthService {
     };
   }
 
-  async recoveryPassword(email: string) {
+  async sendPasswordRecoveryEmail(email: string) {
     const foundUser = await this.usersService.user({ email });
     if (!foundUser) throw new NotFoundException('User not found');
 
@@ -81,5 +81,15 @@ export class AuthService {
     await this.mailService.sendRecoveryPasswordEmail(foundUser.email, token);
     // returning success true since sendRecoveryPasswordEmail is void
     return { success: true };
+  }
+
+  async recoverPassword(id: string, password: string) {
+    const foundUser = await this.usersService.user({ id });
+    if (!foundUser) throw new NotFoundException('User not found');
+    const hashedPassword = await this.hashService.hash(password);
+    await this.usersService.updateUser({
+      where: { id },
+      data: { password: hashedPassword },
+    });
   }
 }
