@@ -124,6 +124,7 @@ export class OrdersService {
           id: true,
           status: true,
           total: true,
+          weight: true,
           asaasPaymentId: true,
           buyer: {
             select: {
@@ -165,6 +166,7 @@ export class OrdersService {
           id: true,
           status: true,
           total: true,
+          weight: true,
           buyer: {
             select: {
               username: true,
