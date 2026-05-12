@@ -79,6 +79,7 @@ export class AuthController {
     return {
       success: true,
       message: 'User registered!',
+      invoiceUrl: result.invoiceUrl,
     };
   }
 
