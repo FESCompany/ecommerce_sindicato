@@ -101,6 +101,7 @@ export class BillingService {
       const charge = await this.paymentGatewayService.charge(
         {
           customer: customerId,
+          externalReference: data.chargeExternalReference,
           ...data,
         },
         type,
@@ -129,6 +130,7 @@ export class BillingService {
     return await this.paymentGatewayService.charge(
       {
         customer: customerId,
+        externalReference: data.chargeExternalReference,
         ...data,
       },
       type,
