@@ -82,6 +82,8 @@ model Order {
 
   total Float
 
+  weight Float
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
