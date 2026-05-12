@@ -212,7 +212,8 @@ export class OrdersService {
     if (products.length !== createPaymentProviderOrderDto.items.length)
       throw new NotFoundException('One or more products not found');
 
-    let total = 0;
+    let totalPrice = 0;
+    let totalWeight = 0;
     const itemsData: ItemData[] = [];
 
     for (const item of createPaymentProviderOrderDto.items) {
@@ -224,7 +225,8 @@ export class OrdersService {
         throw new BadRequestException(
           `Insufficient stock for product ${product.name}`,
         );
-      total += product.price * item.quantity;
+      totalPrice += product.price * item.quantity;
+      totalWeight += product.weight * item.quantity;
       itemsData.push({
         productId: product.id,
         price: product.price,
@@ -240,9 +242,9 @@ export class OrdersService {
       const order = await this.prismaService.order.create({
         data: {
           buyerId: createPaymentProviderOrderDto.userId,
-          weight: products.reduce((acc, p) => acc + p.weight, 0),
           sellerId,
-          total,
+          total: totalPrice,
+          weight: totalWeight,
           items: {
             create: itemsData,
           },
@@ -262,7 +264,7 @@ export class OrdersService {
           postalCode: buyer.postalCode,
           billingType: createPaymentProviderOrderDto.billingType,
           dueDate: createPaymentProviderOrderDto.dueDate,
-          value: total,
+          value: totalPrice,
           customerExternalReference: buyer.id,
           chargeExternalReference: order.id,
         },
