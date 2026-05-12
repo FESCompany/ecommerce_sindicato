@@ -40,7 +40,7 @@ export type ValidatePaymentResponse = {
     | 'FAILED'
     | 'REFUNDED'
     | 'CHARGEBACK';
-  subscriptionId: string;
+  externalReference: string;
   value: number;
 };
 
