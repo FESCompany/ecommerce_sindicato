@@ -80,8 +80,6 @@ export class RegisterService {
 
     if (!payment) throw new NotFoundException('Subscription payment not found');
 
-    console.log(payment);
-
     await this.usersService.updateUser({
       where: { id: user.id },
       data: {
@@ -95,6 +93,7 @@ export class RegisterService {
         asaasSubscriptionId: charge.id,
       },
     });
+
     return {
       user,
       invoiceUrl: payment.invoiceUrl,
