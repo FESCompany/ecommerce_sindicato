@@ -77,6 +77,7 @@ export class OrdersService {
           id: true,
           status: true,
           total: true,
+          weight: true,
           asaasPaymentId: true,
           buyer: true,
           seller: true,
@@ -237,6 +238,7 @@ export class OrdersService {
       const order = await this.prismaService.order.create({
         data: {
           buyerId: createPaymentProviderOrderDto.userId,
+          weight: products.reduce((acc, p) => acc + p.weight, 0),
           sellerId,
           total,
           items: {
