@@ -89,7 +89,7 @@ export class MockGatewayProvider implements PaymentGateWayProvider {
       resolve({
         id: paymentId,
         status: 'CONFIRMED',
-        subscriptionId: 'mock_subscription_id',
+        externalReference: 'mock_subscription_id',
         value: 100,
       }),
     );
