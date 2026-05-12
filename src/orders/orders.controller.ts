@@ -14,6 +14,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateOrderDto } from './dtos/create-order.dto';
 import { SellerGuard } from 'src/auth/seller.guard';
 import { ProductsService } from 'src/products/product.service';
+import { SubscriptionGuard } from 'src/subscription/subscription.guard';
 
 @Controller('orders')
 export class OrdersController {
@@ -29,14 +30,14 @@ export class OrdersController {
   }
 
   @Get('seller-orders')
-  @UseGuards(AuthGuard, SellerGuard)
+  @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard)
   async sellerOrders(@Request() req: Request) {
     const seller = req['user'] as { sub: string };
     return await this.ordersService.sellerOrders({ userId: seller.sub });
   }
 
   @Get('seller-orders/:id')
-  @UseGuards(AuthGuard, SellerGuard)
+  @UseGuards(AuthGuard, SellerGuard, SubscriptionGuard)
   async sellerOrder(@Request() req: Request, @Param('id') id: string) {
     const seller = req['user'] as { sub: string };
     const order = await this.ordersService.sellerOrder(seller.sub, id);
@@ -64,7 +65,7 @@ export class OrdersController {
   }
 
   @Post('')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, SubscriptionGuard)
   async create(
     @Body(new ValidationPipe()) createOrderDto: CreateOrderDto,
     @Request() req: Request,
@@ -77,7 +78,7 @@ export class OrdersController {
     });
   }
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, SubscriptionGuard)
   async delete(@Request() req: Request, @Param('id') id: string) {
     const user = req['user'] as { sub: string };
     return await this.ordersService.delete(user.sub, id);
