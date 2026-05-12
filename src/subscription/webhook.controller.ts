@@ -12,11 +12,12 @@ import { PaymentGatewayService } from 'src/payment-gateway/payment-gateway.servi
 type Webhook = {
   payment: {
     id: string;
+    externalReference: string;
   };
 };
 
 @Controller('webhook/subscription')
-export class AsaasWebhook {
+export class WebhookController {
   constructor(
     private subscriptionService: SubscriptionService,
     private configService: ConfigService,
@@ -35,8 +36,9 @@ export class AsaasWebhook {
 
     // search subscription
     const subscription = await this.subscriptionService.getSubscriptionById(
-      payment.id,
+      payment.externalReference,
     );
+
     if (!subscription)
       throw new UnauthorizedException('Subscription not found');
 
@@ -52,7 +54,7 @@ export class AsaasWebhook {
       this.configService.get<string>('ASAAS_API_KEY')!,
     );
 
-    if (realPayment.id !== subscription.asaasSubscriptionId)
+    if (realPayment.externalReference !== subscription.id)
       throw new UnauthorizedException('Payment mismatch');
 
     // if the payment is pending, we don't need to update the subscription status
@@ -63,7 +65,7 @@ export class AsaasWebhook {
       realPayment.status === 'CONFIRMED' ||
       realPayment.status === 'RECEIVED'
     ) {
-      await this.subscriptionService.paymentStatus('PAID', payment.id);
+      await this.subscriptionService.paymentStatus('PAID', subscription.id);
     }
 
     if (
@@ -72,7 +74,7 @@ export class AsaasWebhook {
       realPayment.status === 'REFUNDED' ||
       realPayment.status === 'CHARGEBACK'
     ) {
-      await this.subscriptionService.paymentStatus('EXPIRED', payment.id);
+      await this.subscriptionService.paymentStatus('EXPIRED', subscription.id);
     }
   }
 }
