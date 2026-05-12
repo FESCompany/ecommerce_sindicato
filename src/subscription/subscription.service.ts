@@ -70,7 +70,7 @@ export class SubscriptionService {
     try {
       const payment = await this.prismaService.subscription.update({
         where: {
-          asaasSubscriptionId: subscriptionId,
+          id: subscriptionId,
         },
         data: {
           status,
