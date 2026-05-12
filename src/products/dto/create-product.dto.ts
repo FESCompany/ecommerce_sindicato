@@ -14,5 +14,8 @@ export class CreateProductDto {
   price: number;
 
   @IsNumber()
+  weight: number;
+
+  @IsNumber()
   stock: number;
 }

@@ -20,6 +20,9 @@ export class UpdateProductDto {
   description?: string;
 
   @IsNumber()
+  weight: number;
+
+  @IsNumber()
   @Type(() => Number)
   @IsOptional()
   price?: number;
