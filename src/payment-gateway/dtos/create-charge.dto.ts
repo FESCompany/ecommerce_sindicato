@@ -16,6 +16,9 @@ export class CreateChargeDto {
   @IsString()
   customer: string;
 
+  @IsString()
+  externalReference: string;
+
   @IsEnum(BillingType)
   billingType: BillingType;
 
